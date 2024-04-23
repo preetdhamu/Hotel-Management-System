@@ -473,7 +473,7 @@ void Room::room_details()
     cout << "\t\t	*        WELCOME TO HOTEL RESONANCE             *\n";
     cout << "\t\t	*       -----------------------------           *\n";
     cout << "\t\t	*                                               *\n";
-    cout << "\t\t	*         GOLDEN AVENUE,AMRITSAR                *\n";
+    cout << "\t\t	*         GOLDEN AVENUE,xxxxxxxx                *\n";
     cout << "\t\t	*************************************************\n";
     cout << "\t\t Single Room: A room assigned to one person. May have one or more beds " << endl
          << "\t\t Double Room: A room assigned to two people. May have one or more beds." << endl;
@@ -617,7 +617,7 @@ int main()
     cout << "\t\t	*        WELCOME TO HOTEL RESONANCE             *\n";
     cout << "\t\t	*       -----------------------------           *\n";
     cout << "\t\t	*                                               *\n";
-    cout << "\t\t	*         GOLDEN AVENUE,AMRITSAR                *\n";
+    cout << "\t\t	*         GOLDEN AVENUE,xxxxxxxx                *\n";
     cout << "\t\t	*************************************************\n";
     cout << "Press Enter >" << endl;
     getchar();
