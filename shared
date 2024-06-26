@@ -1,0 +1,173 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'SecondPage.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: FormPage(),
+    );
+  }
+}
+
+class FormPage extends StatefulWidget {
+  @override
+  _FormPageState createState() => _FormPageState();
+}
+
+class _FormPageState extends State<FormPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedInput();
+    _nameController.addListener(() => _saveInput('name', _nameController.text));
+    _emailController
+        .addListener(() => _saveInput('email', _emailController.text));
+  }
+
+  Future<void> _loadSavedInput() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _nameController.text = prefs.getString('name') ?? '';
+    _emailController.text = prefs.getString('email') ?? '';
+  }
+
+  Future<void> _saveInput(String key, String value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(key, value);
+  }
+
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    _nameController.clear();
+    _emailController.clear();
+    _clearSavedInput();
+  }
+
+  Future<void> _clearSavedInput() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('name');
+    await prefs.remove('email');
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState?.validate() ?? false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Form Submitted Successfully')),
+      );
+      _resetForm();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please correct the errors in the form')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Form Example'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _submitForm,
+                child: Text('Submit'),
+              ),
+              ElevatedButton(
+                onPressed: _resetForm,
+                child: Text('Reset Form'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return SecondPage();
+                  }));
+                },
+                child: Text('Second Page'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class SecondPage extends StatefulWidget {
+  const SecondPage({Key? key}) : super(key: key);
+
+  @override
+  _SecondPageState createState() => _SecondPageState();
+}
+
+class _SecondPageState extends State<SecondPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      
+      body: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/bg.jpg'), // Correct path format
+            fit: BoxFit.cover, // This ensures the image covers the entire background
+          ),
+        ),
+        child: Text(
+          "Second Page",
+          style: TextStyle(
+            fontFamily: 'PlaywriteNGModern',
+            fontSize: 30,
+          ),
+        ),
+      ),
+    );
+  }
+}
