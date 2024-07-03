@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ColorChanger(),
+    );
+  }
+}
+
+class ColorChanger extends StatefulWidget {
+  @override
+  _ColorChangerState createState() => _ColorChangerState();
+}
+
+class _ColorChangerState extends State<ColorChanger> {
+  Color _textColor = Colors.black;
+  Color _backgroundColor = Colors.white;
+  Color _iconColor = Colors.grey;
+  Color _fontColor = Colors.black;
+  Color _headerColor = Colors.blue;
+
+  bool _textColorLocked = false;
+  bool _backgroundColorLocked = false;
+  bool _iconColorLocked = false;
+  bool _fontColorLocked = false;
+  bool _headerColorLocked = false;
+
+  void _changeColor(Color newColor, String colorType) {
+    setState(() {
+      switch (colorType) {
+        case 'textColor':
+          if (!_textColorLocked) _textColor = newColor;
+          break;
+        case 'backgroundColor':
+          if (!_backgroundColorLocked) _backgroundColor = newColor;
+          break;
+        case 'iconColor':
+          if (!_iconColorLocked) _iconColor = newColor;
+          break;
+        case 'fontColor':
+          if (!_fontColorLocked) _fontColor = newColor;
+          break;
+        case 'headerColor':
+          if (!_headerColorLocked) _headerColor = newColor;
+          break;
+      }
+    });
+  }
+
+  void _toggleLock(String colorType) {
+    setState(() {
+      switch (colorType) {
+        case 'textColor':
+          _textColorLocked = !_textColorLocked;
+          break;
+        case 'backgroundColor':
+          _backgroundColorLocked = !_backgroundColorLocked;
+          break;
+        case 'iconColor':
+          _iconColorLocked = !_iconColorLocked;
+          break;
+        case 'fontColor':
+          _fontColorLocked = !_fontColorLocked;
+          break;
+        case 'headerColor':
+          _headerColorLocked = !_headerColorLocked;
+          break;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Color Changer')),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildColorContainer('Text Color', _textColor, 'textColor', _textColorLocked),
+          _buildColorContainer('Background Color', _backgroundColor, 'backgroundColor', _backgroundColorLocked),
+          _buildColorContainer('Icon Color', _iconColor, 'iconColor', _iconColorLocked),
+          _buildColorContainer('Font Color', _fontColor, 'fontColor', _fontColorLocked),
+          _buildColorContainer('Header Color', _headerColor, 'headerColor', _headerColorLocked),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildColorContainer(String label, Color color, String colorType, bool isLocked) {
+    return GestureDetector(
+      onTap: () {
+        _changeColor(_getRandomColor(), colorType);
+      },
+      child: Container(
+        margin: EdgeInsets.all(10),
+        padding: EdgeInsets.all(20),
+        color: color,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: TextStyle(color: Colors.white)),
+            IconButton(
+              icon: Icon(isLocked ? Icons.lock : Icons.lock_open, color: Colors.white),
+              onPressed: () {
+                _toggleLock(colorType);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getRandomColor() {
+    return Color((Math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
+  }
+}
