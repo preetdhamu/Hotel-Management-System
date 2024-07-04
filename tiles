@@ -1,0 +1,103 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: DragAndDropExample(),
+    );
+  }
+}
+
+class DragAndDropExample extends StatefulWidget {
+  @override
+  _DragAndDropExampleState createState() => _DragAndDropExampleState();
+}
+
+class _DragAndDropExampleState extends State<DragAndDropExample> {
+  List<WidgetData> widgets = [
+    WidgetData(Offset(50, 50), Colors.red, 100, 0),
+    WidgetData(Offset(150, 150), Colors.green, 100, 1),
+    WidgetData(Offset(250, 250), Colors.blue, 100, 2),
+    WidgetData(Offset(20, 250), const Color.fromARGB(255, 0, 0, 0), 100, 2),
+  ];
+
+  void bringToFront(int index) {
+    setState(() {
+      int maxZIndex = widgets.fold(
+          0, (max, widget) => widget.zIndex > max ? widget.zIndex : max);
+      widgets[index].zIndex = maxZIndex + 1;
+      widgets.sort((a, b) => a.zIndex.compareTo(b.zIndex));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Drag and Drop Example'),
+      ),
+      body: Stack(
+        children: List.generate(widgets.length, (index) {
+          return Positioned(
+            left: widgets[index].position.dx,
+            top: widgets[index].position.dy,
+            child: Draggable(
+              feedback: buildContainer(
+                  widgets[index].color, 1.0, widgets[index].width, "Ram"),
+              childWhenDragging: Container(),
+              onDragEnd: (details) {
+                setState(() {
+                  widgets[index].position =
+                      Offset(details.offset.dx, details.offset.dy - 107);
+                  bringToFront(index);
+                });
+              },
+              child: GestureDetector(
+                onTap: () {
+                  bringToFront(index);
+                },
+                onHorizontalDragUpdate: (details) {
+                  setState(() {
+                    widgets[index].width += details.delta.dx;
+                  });
+                },
+                child: buildContainer(
+                  widgets[index].color,
+                  1.0,
+                  widgets[index].width < 50 ? 50 : widgets[index].width ,
+                  "Hello"
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget buildContainer(Color color, double opacity, double width , String label) {
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        width: width,
+        height: 100,
+        color: color,
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+class WidgetData {
+  Offset position;
+  Color color;
+  double width;
+  int zIndex;
+
+  WidgetData(this.position, this.color, this.width, this.zIndex);
+}
