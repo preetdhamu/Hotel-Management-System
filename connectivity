@@ -1,0 +1,128 @@
+To achieve this in your Flutter app, you can use the connectivity_plus package to monitor the internet connection and provider for state management. Here’s a step-by-step guide:
+
+Add dependencies:
+Add the necessary dependencies to your pubspec.yaml file:
+
+yaml
+Copy code
+dependencies:
+  flutter:
+    sdk: flutter
+  connectivity_plus: ^2.3.0
+  provider: ^6.0.0
+Create a Connectivity Service:
+Create a service to monitor the internet connection.
+
+dart
+Copy code
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
+
+class ConnectivityService with ChangeNotifier {
+  ConnectivityResult _connectivityStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+
+  ConnectivityService() {
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  ConnectivityResult get connectivityStatus => _connectivityStatus;
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    _connectivityStatus = result;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+}
+Set up the Provider:
+Wrap your app with the ChangeNotifierProvider in the main.dart file.
+
+dart
+Copy code
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'connectivity_service.dart'; // Adjust the import according to your file structure
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ConnectivityService(),
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Connectivity Example',
+      home: HomeScreen(),
+    );
+  }
+}
+Create a Banner Widget:
+Create a widget that displays the offline banner.
+
+dart
+Copy code
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'connectivity_service.dart'; // Adjust the import according to your file structure
+
+class OfflineBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final connectivityStatus = context.watch<ConnectivityService>().connectivityStatus;
+
+    if (connectivityStatus == ConnectivityResult.none) {
+      return Container(
+        color: Colors.red,
+        height: 30,
+        child: Center(
+          child: Text(
+            'You are offline',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+    return SizedBox.shrink();
+  }
+}
+Integrate the Banner in Your Screens:
+Include the OfflineBanner widget in your screens.
+
+dart
+Copy code
+import 'package:flutter/material.dart';
+import 'offline_banner.dart'; // Adjust the import according to your file structure
+
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home Screen'),
+      ),
+      body: Column(
+        children: [
+          OfflineBanner(),
+          Expanded(
+            child: Center(
+              child: Text('Your main content here'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+With this setup, the app will check for internet connectivity using the connectivity_plus package and display an offline banner at the top of each screen when the user goes offline. The provider package manages the state and notifies the UI of connectivity changes.
