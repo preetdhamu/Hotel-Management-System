@@ -1,0 +1,163 @@
+import 'package:flutter/material.dart';
+import 'package:porcupine_flutter/porcupine_flutter.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Voice Assistant')),
+        body: VoiceAssistant(),
+      ),
+    );
+  }
+}
+
+class VoiceAssistant extends StatefulWidget {
+  @override
+  _VoiceAssistantState createState() => _VoiceAssistantState();
+}
+
+class _VoiceAssistantState extends State<VoiceAssistant> {
+  PorcupineManager porcupineManager;
+  stt.SpeechToText speech;
+  FlutterTts flutterTts;
+  bool isListening = false;
+  String recognizedCommand = '';
+  int questionIndex = 0;
+  List<String> questions = [
+    'What is your name?',
+    'What is your address?',
+    'Is it okay to save this information?',
+  ];
+  TextEditingController nameController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    initPorcupine();
+    speech = stt.SpeechToText();
+    flutterTts = FlutterTts();
+  }
+
+  void initPorcupine() async {
+    try {
+      porcupineManager = await PorcupineManager.fromKeywords(['gimmy'], [0.5], _wakeWordCallback);
+      await porcupineManager.start();
+    } catch (e) {
+      print("Error initializing Porcupine: $e");
+    }
+  }
+
+  void _wakeWordCallback(int keywordIndex) async {
+    if (keywordIndex == 0) {
+      print("Wake word detected: Hey Gimmy");
+      setState(() {
+        isListening = true;
+      });
+      await askQuestion();
+    }
+  }
+
+  Future<void> askQuestion() async {
+    if (questionIndex < questions.length) {
+      await speak(questions[questionIndex]);
+      await listenForAnswer();
+    } else {
+      // All questions asked, proceed with form submission
+      showConfirmationDialog();
+    }
+  }
+
+  Future<void> listenForAnswer() async {
+    bool available = await speech.initialize();
+    if (available) {
+      await speech.listen(
+        onResult: (stt.SpeechRecognitionResult result) async {
+          setState(() {
+            recognizedCommand = result.recognizedWords.toLowerCase();
+          });
+          print('Command recognized: $recognizedCommand');
+          if (recognizedCommand.isNotEmpty) {
+            await handleVoiceCommand(recognizedCommand);
+            await speech.stop();
+            setState(() {
+              isListening = false;
+            });
+          } else {
+            // If no answer received, repeat the question
+            await speak('Sorry, I didn\'t catch that. Please try again.');
+            await listenForAnswer();
+          }
+        },
+      );
+    }
+  }
+
+  Future<void> handleVoiceCommand(String command) async {
+    if (questionIndex == 0) {
+      nameController.text = command;
+    } else if (questionIndex == 1) {
+      addressController.text = command;
+    }
+    questionIndex++;
+    await askQuestion();
+  }
+
+  Future<void> speak(String text) async {
+    await flutterTts.setLanguage('en-US');
+    await flutterTts.speak(text);
+  }
+
+  void showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmation'),
+          content: Text('Is it okay to save this information?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Handle form submission here
+                // For now, just print a message
+                print('User confirmed submission');
+              },
+            ),
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Handle cancellation if needed
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    if (porcupineManager != null) {
+      porcupineManager.delete();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: isListening ? CircularProgressIndicator() : Text('Listening for "Hey Gimmy"...'),
+    );
+  }
+}
